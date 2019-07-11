@@ -8,7 +8,6 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/gammazero/nexus/client"
 	"github.com/gammazero/nexus/wamp"
-	"log"
 	"strings"
 )
 
@@ -88,11 +87,12 @@ func (c *Component) Close() error {
 }
 
 func (c *Component) addHandlers() {
+	c.discordSess.AddHandler(func(s *discordgo.Session, u *discordgo.VoiceStateUpdate) {
+		_ = c.wampClient.Publish("com.discord.voice_state_update", nil, wamp.List{u}, nil)
+	})
+
 	c.discordSess.AddHandler(func(s *discordgo.Session, u *discordgo.VoiceServerUpdate) {
-		err := c.wampClient.Publish("com.discord.voice_server_update", nil, wamp.List{u}, nil)
-		if err != nil {
-			log.Println(err)
-		}
+		_ = c.wampClient.Publish("com.discord.voice_server_update", nil, wamp.List{u}, nil)
 	})
 }
 
@@ -109,6 +109,7 @@ func (c *Component) updateVoiceState(ctx context.Context, args wamp.List, kwargs
 	mute, _ := wamp.AsBool(kwargs["mute"])
 	deaf, _ := wamp.AsBool(kwargs["deaf"])
 
+	// TODO does this handle disconnects properly?
 	err := c.discordSess.ChannelVoiceJoinManual(gID, cID, mute, deaf)
 	if err != nil {
 		return resultFromError(err)
