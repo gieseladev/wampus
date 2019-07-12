@@ -14,7 +14,7 @@ action "Docker login" {
 action "Docker build" {
   uses = "actions/docker/cli@master"
   needs = ["Docker login"]
-  args = "build --tag wampus ."
+  args = "build --tag wampus --file build/Dockerfile ."
 }
 
 action "Docker tag latest" {
