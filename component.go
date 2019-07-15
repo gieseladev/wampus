@@ -62,7 +62,7 @@ func Connect(discordToken string, routerURL string, cfg client.Config) (*Compone
 
 	s, err := client.ConnectNet(routerURL, cfg)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("connection to WAMP router failed: %s", err)
 	}
 
 	return NewComponent(d, s), nil
@@ -72,7 +72,7 @@ func Connect(discordToken string, routerURL string, cfg client.Config) (*Compone
 func (c *Component) Open() error {
 	err := c.discordSess.Open()
 	if err != nil {
-		return err
+		return fmt.Errorf("connection to discord failed: %s", err)
 	}
 
 	return c.registerProcedures()

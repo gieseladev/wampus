@@ -11,10 +11,10 @@ import (
 )
 
 type Config struct {
-	DiscordToken string
-	RouterURL    string
+	DiscordToken string `json:"discord_token"`
+	RouterURL    string `json:"router_url"`
 
-	Realm string
+	Realm string `json:"realm"`
 }
 
 func loadConfig(path string) (*Config, error) {

@@ -1,4 +1,4 @@
-discord_token = ""
+discord_token = "" # REQUIRED
 
-router_url = ""
-realm = "giesela"
+router_url = "" # REQUIRED
+realm = ""      # REQUIRED
