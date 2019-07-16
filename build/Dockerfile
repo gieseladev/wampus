@@ -1,5 +1,7 @@
 FROM golang:1.12-alpine as builder
 
+LABEL version="0.0.1"
+
 RUN apk update && apk add --no-cache git ca-certificates && update-ca-certificates
 
 WORKDIR /wampus
