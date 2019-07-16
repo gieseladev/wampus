@@ -60,6 +60,9 @@ func Connect(discordToken string, routerURL string, cfg client.Config) (*Compone
 		return nil, err
 	}
 
+	// TODO configurable log level
+	d.LogLevel = discordgo.LogInformational
+
 	s, err := client.ConnectNet(routerURL, cfg)
 	if err != nil {
 		return nil, fmt.Errorf("connection to WAMP router failed: %s", err)
@@ -84,6 +87,11 @@ func (c *Component) Close() error {
 		c.discordSess.Close(),
 		c.wampClient.Close(),
 	)
+}
+
+// Done returns a channel which is closed when the component is done
+func (c *Component) Done() <-chan struct{} {
+	return c.wampClient.Done()
 }
 
 func (c *Component) addHandlers() {

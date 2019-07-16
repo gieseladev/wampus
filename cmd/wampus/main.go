@@ -5,24 +5,38 @@ import (
 	"github.com/gammazero/nexus/client"
 	"github.com/gieseladev/wampus"
 	"github.com/micro/go-micro/config"
+	"github.com/micro/go-micro/config/source"
 	"github.com/micro/go-micro/config/source/env"
 	"github.com/micro/go-micro/config/source/file"
 	"log"
 )
 
-type Config struct {
-	DiscordToken string `json:"discord_token"`
-	RouterURL    string `json:"router_url"`
+type DiscordConfig struct {
+	Token string `json:"token"`
+}
 
+type WAMPConfig struct {
+	URL   string `json:"url"`
 	Realm string `json:"realm"`
+}
+
+type Config struct {
+	Discord DiscordConfig `json:"discord"`
+	WAMP    WAMPConfig    `json:"wamp"`
 }
 
 func loadConfig(path string) (*Config, error) {
 	c := config.NewConfig()
-	err := c.Load(
-		file.NewSource(file.WithPath(path)),
-		env.NewSource(env.WithStrippedPrefix("WAMPUS")),
-	)
+
+	var sources []source.Source
+
+	if path != "" {
+		sources = append(sources, file.NewSource(file.WithPath(path)))
+	}
+
+	sources = append(sources, env.NewSource())
+
+	err := c.Load(sources...)
 
 	if err != nil {
 		return nil, err
@@ -38,14 +52,14 @@ func loadConfig(path string) (*Config, error) {
 
 func createWAMPConfig(conf *Config) client.Config {
 	return client.Config{
-		Realm: conf.Realm,
+		Realm: conf.WAMP.Realm,
 	}
 }
 
 func run() error {
 	var configPath string
 
-	flag.StringVar(&configPath, "config", "config.toml", "Config file location")
+	flag.StringVar(&configPath, "config", "", "Config file location")
 	flag.Parse()
 
 	conf, err := loadConfig(configPath)
@@ -53,13 +67,19 @@ func run() error {
 		return err
 	}
 
-	c, err := wampus.Connect(conf.DiscordToken, conf.RouterURL, createWAMPConfig(conf))
+	c, err := wampus.Connect(conf.Discord.Token, conf.WAMP.URL, createWAMPConfig(conf))
 	if err != nil {
 		return err
 	}
 	defer func() { _ = c.Close() }()
 
-	return c.Open()
+	if err := c.Open(); err != nil {
+		return err
+	}
+
+	<-c.Done()
+
+	return nil
 }
 
 func main() {

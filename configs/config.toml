@@ -1,4 +1,0 @@
-discord_token = "" # REQUIRED
-
-router_url = "" # REQUIRED
-realm = ""      # REQUIRED
