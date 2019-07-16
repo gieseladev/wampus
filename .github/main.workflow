@@ -2,7 +2,6 @@ workflow "Publish Docker image on release" {
   resolves = [
     "Docker push latest",
     "Docker push release",
-    "Filter version tags",
   ]
   on = "create"
 }
@@ -24,26 +23,26 @@ action "Docker build" {
   args = "build --tag wampus --file build/Dockerfile ."
 }
 
-action "Docker tag latest" {
+action "Docker tag" {
   uses = "actions/docker/tag@master"
   needs = ["Docker build"]
-  args = "wampus gieseladev/wampus:latest"
-}
-
-action "Docker tag release" {
-  uses = "actions/docker/tag@master"
-  needs = ["Docker build"]
-  args = "wampus gieseladev/wampus:$GITHUB_REF"
+  args = "--env wampus gieseladev/wampus"
 }
 
 action "Docker push latest" {
   uses = "actions/docker/cli@master"
-  needs = ["Docker tag latest"]
+  needs = ["Docker tag"]
   args = "push gieseladev/wampus:latest"
 }
 
-action "Docker push release" {
+action "Docker push version" {
   uses = "actions/docker/cli@master"
-  needs = ["Docker tag release"]
-  args = "push gieseladev/wampus:$GITHUB_REF"
+  needs = ["Docker tag"]
+  args = "push gieseladev/wampus:$IMAGE_VERSION"
+}
+
+action "Docker push major version" {
+  uses = "actions/docker/cli@master"
+  needs = ["Docker tag"]
+  args = "push gieseladev/wampus:$IMAGE_MAJOR_VERSION"
 }
