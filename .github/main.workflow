@@ -2,12 +2,19 @@ workflow "Publish Docker image on release" {
   resolves = [
     "Docker push latest",
     "Docker push release",
+    "Filter version tags",
   ]
-  on = "release"
+  on = "create"
+}
+
+action "Filter version tags" {
+  uses = "actions/bin/filter@master"
+  args = "tag v*"
 }
 
 action "Docker login" {
   uses = "actions/docker/login@master"
+  needs = ["Filter version tags"]
   secrets = ["DOCKER_PASSWORD", "DOCKER_USERNAME"]
 }
 
