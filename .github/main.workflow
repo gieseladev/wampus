@@ -1,7 +1,8 @@
 workflow "Publish Docker image on release" {
   resolves = [
     "Docker push latest",
-    "Docker push release",
+    "Docker push version",
+    "Docker push major version",
   ]
   on = "create"
 }
