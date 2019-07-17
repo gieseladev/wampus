@@ -1,5 +1,6 @@
 workflow "Push latest/version Docker image on release" {
   resolves = [
+    "Filter version tags",
     "Docker push latest",
     "Docker push version",
   ]
@@ -13,7 +14,6 @@ action "Filter version tags" {
 
 action "Docker login" {
   uses = "actions/docker/login@master"
-  needs = ["Filter version tags"]
   secrets = ["DOCKER_PASSWORD", "DOCKER_USERNAME"]
 }
 
