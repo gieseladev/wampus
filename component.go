@@ -8,6 +8,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/gammazero/nexus/client"
 	"github.com/gammazero/nexus/wamp"
+	"strconv"
 	"strings"
 )
 
@@ -15,10 +16,14 @@ var (
 	emptyResult = &client.InvokeResult{}
 )
 
-func resultFromError(err error) *client.InvokeResult {
+func resultFromErrorURI(uri wamp.URI) *client.InvokeResult {
 	return &client.InvokeResult{
-		Err: wamp.URI(err.Error()),
+		Err: uri,
 	}
+}
+
+func resultFromError(err error) *client.InvokeResult {
+	return resultFromErrorURI(wamp.URI(err.Error()))
 }
 
 func joinErrors(errs ...error) error {
@@ -38,6 +43,19 @@ func joinErrors(errs ...error) error {
 		return errors.New(strings.Join(errStrings, "\n"))
 	} else {
 		return nil
+	}
+}
+
+// asSnowflake is an extended type assertion similar to the ones provided
+// by wamp, but it converts to discordgo Snowflakes (strings) which includes
+// integers.
+func asSnowflake(v interface{}) (string, bool) {
+	if s, ok := wamp.AsString(v); ok {
+		return s, true
+	} else if i, ok := wamp.AsInt64(v); ok {
+		return strconv.FormatInt(i, 10), true
+	} else {
+		return "", false
 	}
 }
 
@@ -111,8 +129,19 @@ func (c *Component) registerProcedures() error {
 }
 
 func (c *Component) updateVoiceState(ctx context.Context, args wamp.List, kwargs, details wamp.Dict) *client.InvokeResult {
-	gID, _ := wamp.AsString(args[0])
-	cID, _ := wamp.AsString(args[1])
+	if len(args) == 0 {
+		return resultFromErrorURI(wamp.ErrInvalidArgument)
+	}
+
+	gID, _ := asSnowflake(args[0])
+	if gID == "" {
+		return resultFromErrorURI(wamp.ErrInvalidArgument)
+	}
+
+	var cID string
+	if len(args) > 1 {
+		cID, _ = asSnowflake(args[1])
+	}
 
 	mute, _ := wamp.AsBool(kwargs["mute"])
 	deaf, _ := wamp.AsBool(kwargs["deaf"])
