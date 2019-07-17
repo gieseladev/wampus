@@ -1,8 +1,7 @@
-workflow "Publish Docker image on release" {
+workflow "Push latest/version Docker image on release" {
   resolves = [
     "Docker push latest",
     "Docker push version",
-    "Docker push SHA",
   ]
   on = "create"
 }
@@ -46,4 +45,11 @@ action "Docker push SHA" {
   uses = "actions/docker/cli@master"
   needs = ["Docker tag"]
   args = "push gieseladev/wampus:$IMAGE_SHA"
+}
+
+workflow "Push SHA Docker image on push" {
+  resolves = [
+    "Docker push SHA",
+  ]
+  on = "push"
 }
