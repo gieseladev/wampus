@@ -1,0 +1,6 @@
+build/**
+
+.env
+.gitignore
+LICENSE
+README.md

@@ -1,7 +1,5 @@
 FROM golang:1.12-alpine as builder
 
-LABEL version="0.0.1"
-
 RUN apk update && apk add --no-cache git ca-certificates && update-ca-certificates
 
 WORKDIR /wampus
@@ -14,12 +12,14 @@ RUN go mod verify
 
 COPY . .
 
-RUN GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o /bin/wampus ./cmd/wampus
+RUN GOOS=linux GOARCH=amd64 CGO_ENABLED=0 \
+    go build -ldflags="-w -s" -o /bin/wampus ./cmd/wampus
 
 
 FROM scratch
+LABEL version="0.0.1"
 
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-COPY --from=builder /bin/wampus /bin/wampus
+COPY --from=builder /bin/wampus /wampus
 
-ENTRYPOINT ["/bin/wampus"]
+ENTRYPOINT ["/wampus"]
