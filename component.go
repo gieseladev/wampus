@@ -14,16 +14,15 @@ import (
 
 var (
 	emptyResult = &client.InvokeResult{}
+
+	discordErrURI = wamp.URI("com.discord.error")
 )
 
-func resultFromErrorURI(uri wamp.URI) *client.InvokeResult {
+func resultFromErrorURI(uri wamp.URI, args ...interface{}) *client.InvokeResult {
 	return &client.InvokeResult{
-		Err: uri,
+		Err:  uri,
+		Args: args,
 	}
-}
-
-func resultFromError(err error) *client.InvokeResult {
-	return resultFromErrorURI(wamp.URI(err.Error()))
 }
 
 func joinErrors(errs ...error) error {
@@ -130,12 +129,12 @@ func (c *Component) registerProcedures() error {
 
 func (c *Component) updateVoiceState(ctx context.Context, args wamp.List, kwargs, details wamp.Dict) *client.InvokeResult {
 	if len(args) == 0 {
-		return resultFromErrorURI(wamp.ErrInvalidArgument)
+		return resultFromErrorURI(wamp.ErrInvalidArgument, "guild id missing")
 	}
 
 	gID, _ := asSnowflake(args[0])
 	if gID == "" {
-		return resultFromErrorURI(wamp.ErrInvalidArgument)
+		return resultFromErrorURI(wamp.ErrInvalidArgument, "guild id needs to be a snowflake")
 	}
 
 	var cID string
@@ -146,10 +145,9 @@ func (c *Component) updateVoiceState(ctx context.Context, args wamp.List, kwargs
 	mute, _ := wamp.AsBool(kwargs["mute"])
 	deaf, _ := wamp.AsBool(kwargs["deaf"])
 
-	// TODO does this handle disconnects properly?
 	err := c.discordSess.ChannelVoiceJoinManual(gID, cID, mute, deaf)
 	if err != nil {
-		return resultFromError(err)
+		return resultFromErrorURI(discordErrURI, err.Error())
 	}
 
 	return emptyResult
