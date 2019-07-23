@@ -95,6 +95,7 @@ func (c *Component) Open() error {
 		return fmt.Errorf("connection to discord failed: %s", err)
 	}
 
+	c.addHandlers()
 	return c.registerProcedures()
 }
 
@@ -113,11 +114,11 @@ func (c *Component) Done() <-chan struct{} {
 
 func (c *Component) addHandlers() {
 	c.discordSess.AddHandler(func(s *discordgo.Session, u *discordgo.VoiceStateUpdate) {
-		_ = c.wampClient.Publish("com.discord.voice_state_update", nil, wamp.List{u}, nil)
+		_ = c.wampClient.Publish("com.discord.on_voice_state_update", nil, wamp.List{u}, nil)
 	})
 
 	c.discordSess.AddHandler(func(s *discordgo.Session, u *discordgo.VoiceServerUpdate) {
-		_ = c.wampClient.Publish("com.discord.voice_server_update", nil, wamp.List{u}, nil)
+		_ = c.wampClient.Publish("com.discord.on_voice_server_update", nil, wamp.List{u}, nil)
 	})
 }
 
@@ -146,6 +147,7 @@ func (c *Component) updateVoiceState(ctx context.Context, args wamp.List, kwargs
 	deaf, _ := wamp.AsBool(kwargs["deaf"])
 
 	err := c.discordSess.ChannelVoiceJoinManual(gID, cID, mute, deaf)
+
 	if err != nil {
 		return resultFromErrorURI(discordErrURI, err.Error())
 	}
