@@ -6,20 +6,20 @@ import (
 	"errors"
 	"fmt"
 	"github.com/bwmarrin/discordgo"
-	"github.com/gammazero/nexus/client"
-	"github.com/gammazero/nexus/wamp"
+	"github.com/gammazero/nexus/v3/client"
+	"github.com/gammazero/nexus/v3/wamp"
 	"strconv"
 	"strings"
 )
 
 var (
-	emptyResult = &client.InvokeResult{}
+	emptyResult = client.InvokeResult{}
 
 	discordErrURI = wamp.URI("com.discord.error")
 )
 
-func resultFromErrorURI(uri wamp.URI, args ...interface{}) *client.InvokeResult {
-	return &client.InvokeResult{
+func resultFromErrorURI(uri wamp.URI, args ...interface{}) client.InvokeResult {
+	return client.InvokeResult{
 		Err:  uri,
 		Args: args,
 	}
@@ -71,7 +71,7 @@ func NewComponent(d *discordgo.Session, s *client.Client) *Component {
 }
 
 // Connect creates a new component ...
-func Connect(discordToken string, routerURL string, cfg client.Config) (*Component, error) {
+func Connect(ctx context.Context, discordToken string, routerURL string, cfg client.Config) (*Component, error) {
 	d, err := discordgo.New(fmt.Sprintf("Bot %s", discordToken))
 	if err != nil {
 		return nil, err
@@ -80,7 +80,7 @@ func Connect(discordToken string, routerURL string, cfg client.Config) (*Compone
 	// TODO configurable log level
 	d.LogLevel = discordgo.LogInformational
 
-	s, err := client.ConnectNet(routerURL, cfg)
+	s, err := client.ConnectNet(ctx, routerURL, cfg)
 	if err != nil {
 		return nil, fmt.Errorf("connection to WAMP router failed: %s", err)
 	}
@@ -128,7 +128,9 @@ func (c *Component) registerProcedures() error {
 	)
 }
 
-func (c *Component) updateVoiceState(ctx context.Context, args wamp.List, kwargs, details wamp.Dict) *client.InvokeResult {
+func (c *Component) updateVoiceState(ctx context.Context, invocation *wamp.Invocation) client.InvokeResult {
+	args := invocation.Arguments
+
 	if len(args) == 0 {
 		return resultFromErrorURI(wamp.ErrInvalidArgument, "guild id missing")
 	}
@@ -142,6 +144,8 @@ func (c *Component) updateVoiceState(ctx context.Context, args wamp.List, kwargs
 	if len(args) > 1 {
 		cID, _ = asSnowflake(args[1])
 	}
+
+	kwargs := invocation.ArgumentsKw
 
 	mute, _ := wamp.AsBool(kwargs["mute"])
 	deaf, _ := wamp.AsBool(kwargs["deaf"])

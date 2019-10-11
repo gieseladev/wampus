@@ -1,8 +1,9 @@
 package main
 
 import (
+	"context"
 	"flag"
-	"github.com/gammazero/nexus/client"
+	"github.com/gammazero/nexus/v3/client"
 	"github.com/gieseladev/wampus"
 	"github.com/micro/go-micro/config"
 	"github.com/micro/go-micro/config/source"
@@ -67,7 +68,7 @@ func run() error {
 		return err
 	}
 
-	c, err := wampus.Connect(conf.Discord.Token, conf.WAMP.URL, createWAMPConfig(conf))
+	c, err := wampus.Connect(context.Background(), conf.Discord.Token, conf.WAMP.URL, createWAMPConfig(conf))
 	if err != nil {
 		return err
 	}
