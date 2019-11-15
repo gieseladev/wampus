@@ -9,6 +9,9 @@ jobs:
     steps:
       - uses: actions/checkout@v1
 
+      - name: Prepare dockerfile
+        run: cp build/Dockerfile ./
+
       - name: Publish latest image
         uses: elgohr/Publish-Docker-Github-Action@master
         with:
