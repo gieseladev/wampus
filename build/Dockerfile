@@ -17,7 +17,7 @@ RUN GOOS=linux GOARCH=amd64 CGO_ENABLED=0 \
 
 
 FROM scratch
-LABEL version="0.0.3"
+LABEL version="0.0.4"
 
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /bin/wampus /wampus
