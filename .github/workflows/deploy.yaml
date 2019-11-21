@@ -15,8 +15,7 @@ jobs:
       - name: Publish latest image
         uses: elgohr/Publish-Docker-Github-Action@master
         with:
-          name: ${{ github.repository }}/wampus
-          registry: docker.pkg.github.com
+          name: gieseladev/wampus
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
@@ -24,8 +23,7 @@ jobs:
         name: Publish tagged image
         uses: elgohr/Publish-Docker-Github-Action@master
         with:
-          name: ${{ github.repository }}/wampus
-          registry: docker.pkg.github.com
+          name: gieseladev/wampus
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
           tag_names: "true"
