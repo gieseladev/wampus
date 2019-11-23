@@ -27,21 +27,22 @@ func resultFromErrorURI(uri wamp.URI, args ...interface{}) client.InvokeResult {
 
 func joinErrors(errs ...error) error {
 	var lastErr error
-	errStrings := make([]string, len(errs))
+	var errStrings []string
 
-	for i, err := range errs {
+	for _, err := range errs {
 		if err != nil {
 			lastErr = err
-			errStrings[i] = err.Error()
+			errStrings = append(errStrings, err.Error())
 		}
 	}
 
-	if len(errStrings) == 1 {
-		return lastErr
-	} else if len(errStrings) > 1 {
-		return errors.New(strings.Join(errStrings, "\n"))
-	} else {
+	switch len(errStrings) {
+	case 0:
 		return nil
+	case 1:
+		return lastErr
+	default:
+		return errors.New(strings.Join(errStrings, "\n"))
 	}
 }
 
@@ -78,7 +79,7 @@ func Connect(ctx context.Context, discordToken string, routerURL string, cfg cli
 	}
 
 	// TODO configurable log level
-	d.LogLevel = discordgo.LogInformational
+	d.LogLevel = discordgo.LogDebug
 
 	s, err := client.ConnectNet(ctx, routerURL, cfg)
 	if err != nil {
