@@ -124,8 +124,20 @@ func (c *Component) addHandlers() {
 
 func (c *Component) registerProcedures() error {
 	return joinErrors(
+		c.wampClient.Register("com.discord.meta.assert_ready", c.assertReady, nil),
 		c.wampClient.Register("com.discord.update_voice_state", c.updateVoiceState, nil),
 	)
+}
+
+func (c *Component) assertReady(ctx context.Context, invocation *wamp.Invocation) client.InvokeResult {
+	if !c.wampClient.Connected() {
+		return client.InvokeResult{
+			Err:  discordErrURI,
+			Args: []interface{}{"not connected to discord"},
+		}
+	}
+
+	return client.InvokeResult{}
 }
 
 func (c *Component) updateVoiceState(ctx context.Context, invocation *wamp.Invocation) client.InvokeResult {
