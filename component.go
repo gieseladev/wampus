@@ -3,61 +3,11 @@ package wampus
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"github.com/bwmarrin/discordgo"
 	"github.com/gammazero/nexus/v3/client"
 	"github.com/gammazero/nexus/v3/wamp"
-	"strconv"
-	"strings"
 )
-
-var (
-	emptyResult = client.InvokeResult{}
-
-	discordErrURI = wamp.URI("com.discord.error")
-)
-
-func resultFromErrorURI(uri wamp.URI, args ...interface{}) client.InvokeResult {
-	return client.InvokeResult{
-		Err:  uri,
-		Args: args,
-	}
-}
-
-func joinErrors(errs ...error) error {
-	var lastErr error
-	var errStrings []string
-
-	for _, err := range errs {
-		if err != nil {
-			lastErr = err
-			errStrings = append(errStrings, err.Error())
-		}
-	}
-
-	switch len(errStrings) {
-	case 0:
-		return nil
-	case 1:
-		return lastErr
-	default:
-		return errors.New(strings.Join(errStrings, "\n"))
-	}
-}
-
-// asSnowflake is an extended type assertion similar to the ones provided
-// by wamp, but it converts to discordgo Snowflakes (strings) which includes
-// integers.
-func asSnowflake(v interface{}) (string, bool) {
-	if s, ok := wamp.AsString(v); ok {
-		return s, true
-	} else if i, ok := wamp.AsInt64(v); ok {
-		return strconv.FormatInt(i, 10), true
-	} else {
-		return "", false
-	}
-}
 
 // Component holds the discord session and the WAMP client.
 type Component struct {
@@ -124,50 +74,22 @@ func (c *Component) addHandlers() {
 }
 
 func (c *Component) registerProcedures() error {
+
 	return joinErrors(
-		c.wampClient.Register("com.discord.meta.assert_ready", c.assertReady, nil),
-		c.wampClient.Register("com.discord.update_voice_state", c.updateVoiceState, nil),
+		// Meta
+		c.wampClient.Register(DiscordURIPrefix+"meta.assert_ready", c.assertReady, nil),
+		c.registerGatewayProcedures(),
+		c.registerTokenProcedures(),
 	)
 }
 
-func (c *Component) assertReady(ctx context.Context, invocation *wamp.Invocation) client.InvokeResult {
+func (c *Component) assertReady(_ context.Context, _ *wamp.Invocation) client.InvokeResult {
 	if !c.wampClient.Connected() {
 		return client.InvokeResult{
-			Err:  discordErrURI,
+			Err:  ErrURI,
 			Args: []interface{}{"not connected to discord"},
 		}
 	}
 
 	return client.InvokeResult{}
-}
-
-func (c *Component) updateVoiceState(ctx context.Context, invocation *wamp.Invocation) client.InvokeResult {
-	args := invocation.Arguments
-
-	if len(args) == 0 {
-		return resultFromErrorURI(wamp.ErrInvalidArgument, "guild id missing")
-	}
-
-	gID, _ := asSnowflake(args[0])
-	if gID == "" {
-		return resultFromErrorURI(wamp.ErrInvalidArgument, "guild id needs to be a snowflake")
-	}
-
-	var cID string
-	if len(args) > 1 {
-		cID, _ = asSnowflake(args[1])
-	}
-
-	kwargs := invocation.ArgumentsKw
-
-	mute, _ := wamp.AsBool(kwargs["mute"])
-	deaf, _ := wamp.AsBool(kwargs["deaf"])
-
-	err := c.discordSess.ChannelVoiceJoinManual(gID, cID, mute, deaf)
-
-	if err != nil {
-		return resultFromErrorURI(discordErrURI, err.Error())
-	}
-
-	return emptyResult
 }
