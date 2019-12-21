@@ -2,7 +2,7 @@ package wampus
 
 import "github.com/gammazero/nexus/v3/wamp"
 
-const DiscordURIPrefix = "dev.discord."
+const DiscordURIPrefix = "com.discord."
 
 var (
 	ErrURI           = wamp.URI(DiscordURIPrefix + "error")
