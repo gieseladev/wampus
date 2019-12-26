@@ -74,7 +74,6 @@ func (c *Component) addHandlers() {
 }
 
 func (c *Component) registerProcedures() error {
-
 	return joinErrors(
 		// Meta
 		c.wampClient.Register(DiscordURIPrefix+"meta.assert_ready", c.assertReady, nil),

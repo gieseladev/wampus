@@ -1,0 +1,65 @@
+meta.assert_ready:
+  summary: Assert that WAMPus is ready.
+  description: >
+    This is a debug procedure.
+
+update_voice_state:
+  summary: Update the voice state.
+  description: >
+    Send a [voice state update](https://discordapp.com/developers/docs/topics/gateway#update-voice-state).
+    Used to join, move, or disconnect from a voice channel.
+  parameters:
+    - name: guild id
+      in: args
+      description: ID of the guild.
+      required: true
+      schema:
+        $ref: #/components/schemas/snowflake
+    - name: channel id
+      in: args
+      description: ID of the voice channel to join.
+      required: false
+      schema:
+        $ref: #/components/schemas/snowflake
+    - name: mute
+      description: is the client muted
+      in: kwargs
+      schema:
+        type: boolean
+    - name: deaf
+      description: is the client deafened
+      in: kwargs
+      schema:
+        type: boolean
+
+  responses:
+    result:
+      description: >
+        Empty result indicating that the voice state update was sent.
+        This does not however mean that the operation was successful.
+
+    errors:
+      - $ref: #/components/responses/InternalError
+
+token.user:
+  summary: Get the user behind a token.
+  parameters:
+    - name: token
+      in: args
+      description: OAuth2 token with the "identify" scope.
+      required: true
+      schema:
+        type: string
+
+  responses:
+    result:
+      description: The user for the token.
+      args:
+        - name: user
+          description: >
+            The [User](https://discordapp.com/developers/docs/resources/user#user-object-user-structure) object.
+
+
+token.guilds:
+
+token.in_guild:

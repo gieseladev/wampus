@@ -1,0 +1,23 @@
+version: 1
+
+info:
+  title: WAMPus
+  description: WAMP integration for Discord.
+  version: 0.1
+
+components:
+  schemas:
+    snowflake:
+      oneOf:
+        - type: string
+        - type: integer
+          format: int64
+  responses:
+    InternalError:
+      description: >
+        Unhandled internal error.
+      uri: internal
+      args:
+        - name: message
+          description: Error message of the internal error.
+          required: true
