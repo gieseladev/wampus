@@ -13,7 +13,7 @@ jobs:
         run: cp build/Dockerfile ./
 
       - name: Publish latest image
-        uses: elgohr/Publish-Docker-Github-Action@master
+        uses: elgohr/Publish-Docker-Github-Action@v5
         with:
           name: gieseladev/wampus
           username: ${{ secrets.DOCKER_USERNAME }}
@@ -21,7 +21,7 @@ jobs:
 
       - if: contains(github.ref, 'refs/tags/v')
         name: Publish tagged image
-        uses: elgohr/Publish-Docker-Github-Action@master
+        uses: elgohr/Publish-Docker-Github-Action@v5
         with:
           name: gieseladev/wampus
           username: ${{ secrets.DOCKER_USERNAME }}
